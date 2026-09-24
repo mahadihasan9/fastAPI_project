@@ -120,13 +120,13 @@ uvicorn main:app --reload --port 8000
 
 ### 1. Random Photo Direct Download API
 ```http
-GET /api/v1/photo/random?api_key=my_secure_api_key_2026
+GET /api/v1/photo/random?api_key=admin
 ```
 - **Response**: Directly streams a random compressed `.jpg` file (`Content-Type: image/jpeg`).
 
 ### 2. Random Photo JSON API
 ```http
-GET /api/v1/photo/random/json?api_key=my_secure_api_key_2026
+GET /api/v1/photo/random/json?api_key=admin
 ```
 - **Response**:
 ```json
