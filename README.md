@@ -10,7 +10,7 @@ Optimized for **Google Chrome, Mozilla Firefox, and Android Mobile WebKit** brow
 
 1. **🔐 Admin Portal Authentication**:
    - Clean, modern administrator login portal.
-   - Protected by a secret password loaded dynamically from `adminkey.txt` (Default: `admin@secret123`).
+   - Protected by a secret password loaded dynamically from `adminkey.txt` (Default: `admin`).
    - Hardened against credential probing and brute-force attempts.
 
 2. **📸 Smart Image Auto-Compression (1KB – 100KB)**:
@@ -81,8 +81,8 @@ fastAPI_project/
 
 | Key Item | File Location | Default Value | Notes |
 |---|---|---|---|
-| **Admin Password** | `adminkey.txt` | `admin@secret123` | Used to authenticate at `/` and access `/dashboard`. `ADMIN_PASSWORD` env var overrides it |
-| **Public API Key** | `apikey.txt` | `my_secure_api_key_2026` | Required in query string (`?api_key=...`) or header (`X-API-Key`). `API_KEY` env var overrides it |
+| **Admin Password** | `adminkey.txt` | `admin` | Used to authenticate at `/` and access `/dashboard`. `ADMIN_PASSWORD` env var overrides it |
+| **Public API Key** | `apikey.txt` | `admin` | Required in query string (`?api_key=...`) or header (`X-API-Key`). `API_KEY` env var overrides it |
 
 > You can update `adminkey.txt` and `apikey.txt` anytime with your custom keys. The server loads changes automatically without restart.
 >
@@ -141,7 +141,7 @@ GET /api/v1/photo/random/json?api_key=my_secure_api_key_2026
 
 ### 3. Specific Photo Download API
 ```http
-GET /api/v1/photo/<photo_id>?api_key=my_secure_api_key_2026
+GET /api/v1/photo/<photo_id>?api_key=admin
 ```
 - **Response**: Streams the image matching the unique `<photo_id>`.
 
