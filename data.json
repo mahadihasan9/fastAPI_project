@@ -1,0 +1,79 @@
+{
+  "E101": {
+    "name": "Grocery Shopping",
+    "amount": 2500,
+    "category": "Food",
+    "date": "2026-09-01",
+    "description": "Bought weekly groceries from supermarket"
+  },
+  "E102": {
+    "name": "Uber Ride",
+    "amount": 450,
+    "category": "Transport",
+    "date": "2026-09-02",
+    "description": "Office commute"
+  },
+  "E103": {
+    "name": "Internet Bill",
+    "amount": 1200,
+    "category": "Utilities",
+    "date": "2026-09-03",
+    "description": "Monthly broadband connection fee"
+  },
+  "E104": {
+    "name": "Restaurant Dinner",
+    "amount": 1800,
+    "category": "Food",
+    "date": "2026-09-04",
+    "description": "Dinner with friends"
+  },
+  "E105": {
+    "name": "Electricity Bill",
+    "amount": 2100,
+    "category": "Utilities",
+    "date": "2026-09-05",
+    "description": "Monthly power bill payment"
+  },
+  "E106": {
+    "name": "Gym Membership",
+    "amount": 1500,
+    "category": "Health",
+    "date": "2026-09-06",
+    "description": "Monthly fitness center fee"
+  },
+  "E107": {
+    "name": "Movie Tickets",
+    "amount": 800,
+    "category": "Entertainment",
+    "date": "2026-09-07",
+    "description": "Cinema with family"
+  },
+  "E108": {
+    "name": "Medicine",
+    "amount": 650,
+    "category": "Health",
+    "date": "2026-09-08",
+    "description": "Bought prescribed vitamins"
+  },
+  "E109": {
+    "name": "Coffee",
+    "amount": 250,
+    "category": "Food",
+    "date": "2026-09-09",
+    "description": "Evening coffee at local cafe"
+  },
+  "E110": {
+    "name": "Mobile Recharge",
+    "amount": 300,
+    "category": "Utilities",
+    "date": "2026-09-10",
+    "description": "Prepaid phone balance top-up"
+  }
+}
+{
+  "status":true,
+  "fileFormat":"jpg",
+  "encode":"base64",
+  "size":100, // ekhane data er lengthe thakbe
+  "data":"base64 eoncode data thakbe ekhane"
+}

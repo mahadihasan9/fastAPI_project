@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - Photo API Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="glass-panel login-card">
+            <div style="display: flex; justify-content: center; margin-bottom: 1.25rem;">
+                <div class="brand-icon" style="width: 54px; height: 54px; font-size: 1.8rem; border-radius: 14px;">
+                    ⚡
+                </div>
+            </div>
+            
+            <h1 class="section-title" style="font-size: 1.6rem; margin-bottom: 0.25rem;">Admin Access</h1>
+            <p class="section-subtitle" style="margin-bottom: 1.5rem;">Enter your administrator password to manage system</p>
+
+            {% if error %}
+            <div class="error-alert">
+                <span>⚠️</span>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form action="/login" method="POST">
+                <div class="form-group">
+                    <label class="form-label" for="admin_password">Admin Password</label>
+                    <input 
+                        type="password" 
+                        id="admin_password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="••••••••••••" 
+                        required 
+                        autofocus
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="padding: 0.9rem; font-size: 1rem;">
+                    <span>Unlock Dashboard</span>
+                    <span>→</span>
+                </button>
+            </form>
+
+            <div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-dim);">
+                <span>🛡️ High Security & Anti-DDoS Firewall Active</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

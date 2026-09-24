@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service
+  mysql_db:
+    image: mysql:8.0
+    container_name: fastapi_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: photo_db
+      MYSQL_USER: fastapi_user
+      MYSQL_PASSWORD: secretpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "fastapi_user", "-psecretpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Web Application Service
+  web:
+    build: .
+    container_name: fastapi_photo_engine
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://fastapi_user:secretpassword@mysql_db:3306/photo_db
+      - FALLBACK_TO_SQLITE=False
+      - MAX_FAILED_ATTEMPTS=5
+      - BLOCK_DURATION_MINUTES=60
+      - RATE_LIMIT_PER_MINUTE=60
+      - ADMIN_RATE_LIMIT_PER_MINUTE=10
+    volumes:
+      - ./uploads:/app/uploads
+      - ./adminkey.txt:/app/adminkey.txt
+      - ./apikey.txt:/app/apikey.txt
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

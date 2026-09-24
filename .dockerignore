@@ -1,0 +1,24 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.git
+.gitignore
+.dockerignore
+*.db
+uploads/*.jpg
+
+# Secrets must never be baked into a published image.
+# Provide them at runtime instead:
+#   -e ADMIN_PASSWORD=... -e API_KEY=...
+# or mount the files (see docker-compose.yml)
+adminkey.txt
+apikey.txt
+
+# Local environment file (session secret + DB credentials) stays on the host.
+# docker-compose.yml / `docker run -e ...` provide these at runtime.
+.env

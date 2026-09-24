@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo API Engine - Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Top Navigation -->
+        <header class="navbar glass-panel">
+            <div class="brand">
+                <div class="brand-icon">⚡</div>
+                <span>Photo API Hub</span>
+            </div>
+            
+            <div class="nav-actions">
+                <span class="badge badge-success">
+                    <span style="font-size: 0.9rem;">●</span> Firewall Active
+                </span>
+                <span class="badge badge-primary" title="Active API Key">
+                    🔑 Key: {{ api_key[:4] }}••••{{ api_key[-4:] if api_key|length > 8 else '' }}
+                </span>
+                <a href="/logout" class="btn btn-outline" style="padding: 0.45rem 0.9rem; font-size: 0.825rem;">
+                    Sign Out
+                </a>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="glass-panel stat-card" style="--stat-glow: rgba(99, 102, 241, 0.25);">
+                <div class="stat-icon" style="color: #818cf8;">🖼️</div>
+                <div>
+                    <div class="stat-label">Total Photos</div>
+                    <div class="stat-value">{{ photos|length }}</div>
+                </div>
+            </div>
+
+            <div class="glass-panel stat-card" style="--stat-glow: rgba(236, 72, 153, 0.25);">
+                <div class="stat-icon" style="color: #f472b6;">💾</div>
+                <div>
+                    <div class="stat-label">Storage Consumed</div>
+                    <div class="stat-value">
+                        {% set total_size = photos|sum(attribute='file_size_kb') %}
+                        {% if total_size > 1024 %}
+                            {{ (total_size / 1024)|round(2) }} MB
+                        {% else %}
+                            {{ total_size|round(1) }} KB
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel stat-card" style="--stat-glow: rgba(16, 185, 129, 0.25);">
+                <div class="stat-icon" style="color: #34d399;">⚙️</div>
+                <div>
+                    <div class="stat-label">Compress Range</div>
+                    <div class="stat-value">1 - 100 <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">KB</span></div>
+                </div>
+            </div>
+
+            <div class="glass-panel stat-card" style="--stat-glow: rgba(239, 68, 68, 0.25);">
+                <div class="stat-icon" style="color: #f87171;">🚫</div>
+                <div>
+                    <div class="stat-label">Blocked Malicious IPs</div>
+                    <div class="stat-value">{{ blocked_ips|length }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace Grid -->
+        <div class="dashboard-grid">
+            <!-- Left: Upload Section -->
+            <div class="glass-panel upload-card">
+                <h2 class="section-title">Upload & Auto-Compress</h2>
+                <p class="section-subtitle">
+                    Upload any photo (even 1MB+). Our engine compresses it to any target size between <strong>1 KB and 100 KB</strong> in high-quality JPG with a unique ID.
+                </p>
+
+                <form id="uploadForm">
+                    <div class="dropzone" id="dropzone">
+                        <div class="dropzone-icon">☁️</div>
+                        <div class="dropzone-text">Click or drag & drop photo here</div>
+                        <div class="dropzone-sub">Supports PNG, JPG, JPEG, WEBP</div>
+                        <input type="file" id="fileInput" name="file" accept="image/*" style="display: none;">
+                    </div>
+
+                    <!-- File preview -->
+                    <div class="preview-container" id="previewContainer">
+                        <img id="previewImg" class="preview-img" src="" alt="Preview">
+                        <div class="preview-details">
+                            <div class="preview-name" id="previewName">filename.jpg</div>
+                            <div class="preview-size" id="previewSize">Original: 1.2 MB</div>
+                        </div>
+                    </div>
+
+                    <!-- Target Size Slider -->
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <span class="slider-label">Target Compressed Size</span>
+                            <span class="target-badge" id="targetSizeVal">50 KB</span>
+                        </div>
+                        <input 
+                            type="range" 
+                            id="targetSizeSlider" 
+                            min="1" 
+                            max="100" 
+                            step="1" 
+                            value="50"
+                        >
+                        <div class="range-labels">
+                            <span>Min: 1 KB</span>
+                            <span>Default: 50 KB</span>
+                            <span>Max: 100 KB</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="uploadBtn" class="btn btn-primary btn-block">
+                        <span>🚀 Upload & Compress Photo</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right: Public API Endpoints -->
+            <div class="glass-panel api-panel">
+                <h2 class="section-title">Public API Endpoints</h2>
+                <p class="section-subtitle">
+                    Fast, secure endpoints protected with private API key authentication. Unauthorized requests are blocked.
+                </p>
+
+                <!-- API 1: Direct Download API -->
+                <div class="glass-panel api-showcase-card" style="background: rgba(15, 23, 42, 0.65);">
+                    <div>
+                        <div class="api-header">
+                            <div>
+                                <span class="api-method">GET</span>
+                                <strong style="margin-left: 0.5rem; font-size: 0.95rem;">Random Photo Download API</strong>
+                            </div>
+                            <button 
+                                class="btn btn-copy" 
+                                onclick="copyToClipboard('{{ base_url }}/api/v1/photo/random?api_key={{ api_key }}', 'Download Photo API URL copied!')"
+                            >
+                                📋 Copy Download Photo API
+                            </button>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            Directly streams a random JPG file. Perfect for bots, scripts, and embeds.
+                        </p>
+                        <div class="api-url-box">
+                            <span>{{ base_url }}/api/v1/photo/random?api_key={{ api_key }}</span>
+                            <a href="/api/v1/photo/random?api_key={{ api_key }}" target="_blank" style="color: var(--accent); font-size: 0.75rem; text-decoration: none;">Test ↗</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API 2: JSON Base64 API -->
+                <div class="glass-panel api-showcase-card" style="background: rgba(15, 23, 42, 0.65); margin-bottom: 0;">
+                    <div>
+                        <div class="api-header">
+                            <div>
+                                <span class="api-method">GET</span>
+                                <strong style="margin-left: 0.5rem; font-size: 0.95rem;">Random Photo JSON API</strong>
+                            </div>
+                            <button 
+                                class="btn btn-copy" 
+                                onclick="copyToClipboard('{{ base_url }}/api/v1/photo/random/json?api_key={{ api_key }}', 'JSON API URL copied!')"
+                            >
+                                📋 Copy JSON API
+                            </button>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            Returns formatted JSON with Base64 payload and length size.
+                        </p>
+                        <div class="api-url-box">
+                            <span>{{ base_url }}/api/v1/photo/random/json?api_key={{ api_key }}</span>
+                            <a href="/api/v1/photo/random/json?api_key={{ api_key }}" target="_blank" style="color: var(--accent); font-size: 0.75rem; text-decoration: none;">Test ↗</a>
+                        </div>
+
+                        <!-- JSON Response Preview -->
+                        <div class="code-preview">
+<pre style="margin: 0;">{
+  "status": true,
+  "fileFormat": "jpg",
+  "encode": "base64",
+  "size": 142850,
+  "data": "/9j/4AAQSkZJRgABAQ..."
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photos Gallery / Management -->
+        <div class="glass-panel gallery-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 class="section-title">Photo Gallery & Repository</h2>
+                    <p class="section-subtitle" style="margin-bottom: 0;">
+                        Browse all compressed JPG files with unique IDs, download, or copy direct API links.
+                    </p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="view-switcher">
+                        <button id="btnGalleryView" class="view-btn active" onclick="switchView('gallery')">
+                            🖼️ Gallery
+                        </button>
+                        <button id="btnTableView" class="view-btn" onclick="switchView('table')">
+                            📋 List
+                        </button>
+                    </div>
+                    <span class="badge badge-primary">{{ photos|length }} Stored</span>
+                </div>
+            </div>
+
+            {% if photos %}
+                <!-- 1. Grid Gallery View (Default) -->
+                <div class="gallery-grid" id="galleryView">
+                    {% for photo in photos %}
+                    <div class="photo-card" id="card-photo-{{ photo.id }}">
+                        <div class="card-img-wrapper" onclick="openLightbox('/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}', '{{ photo.original_name }}', '{{ photo.id }}', '{{ photo.file_size_kb|round(1) }}', '/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}')">
+                            <img class="card-img" src="/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}" alt="{{ photo.original_name }}" loading="lazy">
+                            <div class="card-overlay">
+                                <button class="overlay-btn" title="Enlarge Photo" onclick="event.stopPropagation(); openLightbox('/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}', '{{ photo.original_name }}', '{{ photo.id }}', '{{ photo.file_size_kb|round(1) }}', '/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}')">🔍</button>
+                                <a href="/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}" download="{{ photo.id }}.jpg" class="overlay-btn" title="Download JPG" onclick="event.stopPropagation()">⬇️</a>
+                                <button class="overlay-btn overlay-btn-danger" title="Delete Photo" onclick="event.stopPropagation(); deletePhoto('{{ photo.id }}')">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-title-row">
+                                <div class="card-filename" title="{{ photo.original_name }}">{{ photo.original_name }}</div>
+                                <span class="card-size-badge">{{ photo.file_size_kb|round(1) }} KB</span>
+                            </div>
+                            <div class="card-info-row">
+                                <span>Target: {{ photo.target_size_kb }} KB</span>
+                                {% if photo.width and photo.height %}
+                                <span>{{ photo.width }}x{{ photo.height }}</span>
+                                {% endif %}
+                                <span>{{ photo.created_at.strftime('%b %d, %H:%M') if photo.created_at else '' }}</span>
+                            </div>
+                            <div class="card-footer">
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <span class="id-badge">{{ photo.id }}</span>
+                                    <button 
+                                        class="btn-copy" 
+                                        style="padding: 2px 6px; font-size: 0.7rem;" 
+                                        onclick="copyToClipboard('{{ photo.id }}', 'Copied ID: {{ photo.id }}')"
+                                        title="Copy ID"
+                                    >📋</button>
+                                </div>
+                                <button 
+                                    class="btn-copy" 
+                                    style="padding: 3px 8px; font-size: 0.75rem;" 
+                                    onclick="copyToClipboard('{{ base_url }}/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}', 'Direct Photo URL copied!')"
+                                    title="Copy Direct Link"
+                                >
+                                    🔗 Link
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- 2. Table List View (Alternative) -->
+                <div class="table-responsive" id="tableView" style="display: none;">
+                    <table class="photo-table">
+                        <thead>
+                            <tr>
+                                <th>Preview</th>
+                                <th>Unique ID</th>
+                                <th>Original Name</th>
+                                <th>Compressed Size</th>
+                                <th class="hide-mobile">Target</th>
+                                <th class="hide-mobile">Resolution</th>
+                                <th>Created At</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for photo in photos %}
+                            <tr id="photo-row-{{ photo.id }}">
+                                <td>
+                                    <img 
+                                        class="thumb-img" 
+                                        src="/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}" 
+                                        alt="Thumb" 
+                                        style="cursor: pointer;"
+                                        onclick="openLightbox('/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}', '{{ photo.original_name }}', '{{ photo.id }}', '{{ photo.file_size_kb|round(1) }}', '/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}')"
+                                    >
+                                </td>
+                                <td>
+                                    <span class="id-badge">{{ photo.id }}</span>
+                                    <button 
+                                        class="btn-copy" 
+                                        style="padding: 2px 6px; font-size: 0.7rem; margin-left: 4px;" 
+                                        onclick="copyToClipboard('{{ photo.id }}', 'Copied ID: {{ photo.id }}')"
+                                        title="Copy ID"
+                                    >📋</button>
+                                </td>
+                                <td style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ photo.original_name }}
+                                </td>
+                                <td>
+                                    <strong style="color: #34d399;">{{ photo.file_size_kb|round(1) }} KB</strong>
+                                </td>
+                                <td class="hide-mobile">
+                                    <span style="color: var(--text-muted);">{{ photo.target_size_kb }} KB</span>
+                                </td>
+                                <td class="hide-mobile" style="font-size: 0.8rem; color: var(--text-dim);">
+                                    {% if photo.width and photo.height %}{{ photo.width }}x{{ photo.height }}{% else %}-{% endif %}
+                                </td>
+                                <td style="font-size: 0.8rem; color: var(--text-dim);">
+                                    {{ photo.created_at.strftime('%Y-%m-%d %H:%M') if photo.created_at else '' }}
+                                </td>
+                                <td style="text-align: right;">
+                                    <div style="display: inline-flex; gap: 0.5rem;">
+                                        <a 
+                                            href="/api/v1/photo/{{ photo.id }}?api_key={{ api_key }}" 
+                                            download="{{ photo.id }}.jpg" 
+                                            class="btn btn-outline" 
+                                            style="padding: 0.35rem 0.75rem; font-size: 0.75rem;"
+                                        >
+                                            Download
+                                        </a>
+                                        <button 
+                                            class="btn btn-danger-outline" 
+                                            style="padding: 0.35rem 0.75rem; font-size: 0.75rem;"
+                                            onclick="deletePhoto('{{ photo.id }}')"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 4rem 1rem; color: var(--text-dim);">
+                    <div style="font-size: 3rem; margin-bottom: 0.75rem;">🖼️</div>
+                    <h3 style="color: #fff; margin-bottom: 0.5rem;">Your Gallery is Empty</h3>
+                    <p style="font-size: 0.9rem;">Upload your first photo above to see it appear in your gallery!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Security Firewall & Blocked IPs Section -->
+        {% if blocked_ips %}
+        <div class="glass-panel firewall-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+                <div>
+                    <h2 class="section-title" style="color: #f87171;">🛡️ Firewall Blocked IPs</h2>
+                    <p class="section-subtitle" style="margin-bottom: 0;">
+                        IPs automatically blocked due to invalid API keys, Nmap/Nikto scanning, or SQLi attempts.
+                    </p>
+                </div>
+                <span class="badge badge-danger">{{ blocked_ips|length }} Blocked</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="photo-table">
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Block Reason</th>
+                            <th>Failed Attempts</th>
+                            <th>Blocked At</th>
+                            <th>Blocked Until</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in blocked_ips %}
+                        <tr id="ip-row-{{ item.ip_address|replace('.', '_')|replace(':', '_') }}">
+                            <td><strong style="color: #fca5a5;">{{ item.ip_address }}</strong></td>
+                            <td style="color: var(--text-muted);">{{ item.reason }}</td>
+                            <td>{{ item.failed_attempts }}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-dim);">{{ item.blocked_at.strftime('%Y-%m-%d %H:%M:%S') if item.blocked_at else '' }}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-dim);">{{ item.blocked_until.strftime('%Y-%m-%d %H:%M:%S') if item.blocked_until else 'Permanent' }}</td>
+                            <td style="text-align: right;">
+                                <button 
+                                    class="btn btn-outline" 
+                                    style="padding: 0.3rem 0.75rem; font-size: 0.75rem;" 
+                                    onclick="unblockIpAddress('{{ item.ip_address }}')"
+                                >
+                                    Unblock
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <footer style="margin-top: 3rem; text-align: center; color: var(--text-dim); font-size: 0.825rem; padding-bottom: 2rem;">
+            <span>Powered by FastAPI • High-Security Architecture • Pillow Compression Engine</span>
+        </footer>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightboxModal" class="lightbox-modal" onclick="closeLightbox()">
+        <div class="lightbox-close" onclick="closeLightbox()">✕</div>
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <img id="lightboxImg" class="lightbox-img" src="" alt="Enlarged view">
+            <div class="lightbox-bar">
+                <div style="overflow: hidden; max-width: 320px;">
+                    <div id="lightboxTitle" style="font-weight: 600; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Photo</div>
+                    <div id="lightboxSize" style="font-size: 0.8rem; color: #34d399; font-family: 'JetBrains Mono', monospace;">50 KB</div>
+                </div>
+                <div style="display: flex; gap: 0.6rem;">
+                    <button id="lightboxCopy" class="btn btn-copy">📋 Link</button>
+                    <a id="lightboxDownload" href="#" download="photo.jpg" class="btn btn-primary" style="padding: 0.4rem 0.9rem; font-size: 0.8rem;">⬇️ Download</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">✅ Message</div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
